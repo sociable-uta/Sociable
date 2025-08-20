@@ -1,37 +1,51 @@
 import React, { useState } from 'react';
 import './Login.css';
+import { useNavigate } from 'react-router-dom';
 
-export const Login = ({ setToken, onShowSignup, onShowForgot }) => {
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    if (email && password) {
-      setToken('mock-token');
-      localStorage.setItem('token', 'mock-token');
-      setError('');
-    } else {
-      setError('Invalid credentials');
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        navigate('/'); // home page, assuming it is already authenticated
+      } else {
+        setError(data.message || 'Incorrect email or password, please try again.');
+      }
+    } catch (err) {
+      setError('Server error');
     }
   };
+
 
   return (
     <div className="login-root">
       <div className="login-main">
         <div className="login-left">
-          <h1 className="login-title">Sociable</h1>
+          <h1 className="login-title">SociableUTA</h1>
           <p className="login-welcome">
-            Welcome come with our project<br />
+            Welcome!<br />
           </p>
         </div>
-        <form onSubmit={handleLogin} className="login-form">
+        <form onSubmit={handleLogin} className="login-form"> {/* CHANGE TO USERNAME BASED */}
           {error && <p className="login-error">{error}</p>}
           <input
             type="text"
-            placeholder="Email or phone number"
+            placeholder="Username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="login-input"
@@ -51,17 +65,21 @@ export const Login = ({ setToken, onShowSignup, onShowForgot }) => {
           <a
             href="#"
             className="login-forgot"
-            onClick={e => { e.preventDefault(); onShowForgot(); }}
+            onClick={e => { e.preventDefault(); navigate('/forgot-password'); }}
           >
             Forgot password?
           </a>
           <div className="login-divider"></div>
-          <button
+          {/* <button
             type="button"
             className="login-create-btn"
             onClick={onShowSignup}
           >
-            Create new account
+            Sign Up
+          </button> */}
+
+          <button type="button" onClick={() => navigate('/register')}>
+            Sign Up
           </button>
         </form>
       </div>
